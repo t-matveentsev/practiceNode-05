@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 
+import authRouter from "./routers/auth.js";
 import moviesRouter from "./routers/movies.js";
 
 import { getEnvVar } from "./utils/getEnvVar.js";
@@ -14,6 +15,7 @@ export const startServer = () => {
   app.use(express.json());
   app.use(logger);
 
+  app.use("/auth", authRouter);
   app.use("/movies", moviesRouter);
 
   app.use("*", notFoundHandler);
