@@ -9,6 +9,20 @@ import {
   refreshTokenLifeTime,
 } from "../constants/auth.js";
 
+const createSession = () => {
+  const accessToken = randomBytes(30).toString("base64");
+  const refreshToken = randomBytes(30).toString("base64");
+  const accessTokenValidUntil = Date.now() + accessTokenLifeTime;
+  const refreshTokenValidUntil = Date.now() + refreshTokenLifeTime;
+
+  return {
+    accessToken,
+    refreshToken,
+    accessTokenValidUntil,
+    refreshTokenValidUntil,
+  };
+};
+
 export const findSession = (query) => sessionCollection.findOne(query);
 
 export const findUser = (query) => UserCollection.findOne(query);
@@ -38,14 +52,30 @@ export const signinUser = async (payload) => {
 
   await sessionCollection.findOneAndDelete({ userId: user._id });
 
-  const accessToken = randomBytes(30).toString("base64");
-  const refreshToken = randomBytes(30).toString("base64");
+  const oldSession = createSession();
 
   return sessionCollection.create({
     userId: user._id,
-    accessToken,
-    refreshToken,
-    accessTokenValidUntil: Date.now() + accessTokenLifeTime,
-    refreshTokenValidUntil: Date.now() + refreshTokenLifeTime,
+    ...oldSession,
+  });
+};
+
+export const refreshUser = async ({ refreshToken, sessionId }) => {
+  const session = await findSession({ refreshToken, _id: sessionId });
+  if (!session) {
+    throw createHttpError(401, "Session not found");
+  }
+  if (session.refreshTokenValidUntil < Date.now()) {
+    await sessionCollection.findOneAndDelete({ _id: session._id });
+    throw createHttpError(401, "Session token expired");
+  }
+
+  await sessionCollection.findOneAndDelete({ _id: session._id });
+
+  const newSession = createSession();
+
+  return sessionCollection.create({
+    userId: session.userId,
+    ...newSession,
   });
 };

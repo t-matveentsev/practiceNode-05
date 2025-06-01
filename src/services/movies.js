@@ -12,6 +12,10 @@ export const getMovies = async ({
   const skip = (page - 1) * perPage;
   const movieQuery = MovieCollection.find();
 
+  if (filters.owner) {
+    movieQuery.where("owner").equals(filters.owner);
+  }
+
   if (filters.type) {
     movieQuery.where("type").equals(filters.type);
   }

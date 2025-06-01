@@ -16,6 +16,7 @@ export const getMoviesController = async (req, res) => {
   const paginationParams = parsePaginationParams(req.query);
   const sortParams = parseSortParams(req.query, movieSortFields);
   const filters = parsMovieFilterParams(req.query);
+  filters.owner = req.user._id;
   const data = await getMovies({ ...paginationParams, ...sortParams, filters });
   res.json({
     status: 200,
