@@ -9,9 +9,13 @@ import {
   refreshTokenLifeTime,
 } from "../constants/auth.js";
 
+export const findSession = (query) => sessionCollection.findOne(query);
+
+export const findUser = (query) => UserCollection.findOne(query);
+
 export const signupUser = async (payload) => {
   const { email, password } = payload;
-  const user = await UserCollection.findOne({ email });
+  const user = await findUser({ email });
   if (user) {
     throw createHttpError(409, "Email already in use");
   }
@@ -22,7 +26,7 @@ export const signupUser = async (payload) => {
 
 export const signinUser = async (payload) => {
   const { email, password } = payload;
-  const user = await UserCollection.findOne({ email });
+  const user = await findUser({ email });
   if (!user) {
     throw createHttpError(401, "Email or password invalid");
   }

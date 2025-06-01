@@ -40,7 +40,8 @@ export const getMoviesByIdController = async (req, res) => {
 };
 
 export const addMovieController = async (req, res) => {
-  const data = await addMovie(req.body);
+  const { _id: owner } = req.user;
+  const data = await addMovie({ ...req.body, owner });
 
   res.status(201).json({
     status: 201,
