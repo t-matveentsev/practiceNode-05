@@ -3,7 +3,7 @@ import createHttpError from "http-errors";
 import { randomBytes } from "node:crypto";
 
 import UserCollection from "../db/models/User.js";
-import sessionCollection from "../db/models/Session.js";
+import SessionCollection from "../db/models/Session.js";
 import {
   accessTokenLifeTime,
   refreshTokenLifeTime,
@@ -23,7 +23,7 @@ const createSession = () => {
   };
 };
 
-export const findSession = (query) => sessionCollection.findOne(query);
+export const findSession = (query) => SessionCollection.findOne(query);
 
 export const findUser = (query) => UserCollection.findOne(query);
 
@@ -50,11 +50,11 @@ export const signinUser = async (payload) => {
     throw createHttpError(401, "Email or password invalid");
   }
 
-  await sessionCollection.findOneAndDelete({ userId: user._id });
+  await SessionCollection.findOneAndDelete({ userId: user._id });
 
   const oldSession = createSession();
 
-  return sessionCollection.create({
+  return SessionCollection.create({
     userId: user._id,
     ...oldSession,
   });
@@ -66,16 +66,20 @@ export const refreshUser = async ({ refreshToken, sessionId }) => {
     throw createHttpError(401, "Session not found");
   }
   if (session.refreshTokenValidUntil < Date.now()) {
-    await sessionCollection.findOneAndDelete({ _id: session._id });
+    await SessionCollection.findOneAndDelete({ _id: session._id });
     throw createHttpError(401, "Session token expired");
   }
 
-  await sessionCollection.findOneAndDelete({ _id: session._id });
+  await SessionCollection.findOneAndDelete({ _id: session._id });
 
   const newSession = createSession();
 
-  return sessionCollection.create({
+  return SessionCollection.create({
     userId: session.userId,
     ...newSession,
   });
+};
+
+export const signoutUser = async (sessionId) => {
+  await SessionCollection.deleteOne({ _id: sessionId });
 };
